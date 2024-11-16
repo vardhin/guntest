@@ -7,6 +7,7 @@ const Gun = gun({
 
 let dbName = '';
 let text = '';
+let uniqueData = new Set();
 
 Gun.on("ready", () => {
   console.log("Gun is ready")
@@ -20,16 +21,16 @@ const putData = (dbName, str) => {
 };
 
 const getData = (dbName) => {
-  return new Promise((resolve) => {
-    const db = Gun.get(dbName);
-    db.on((data) => {
-      resolve(data);
-    });
+  const db = Gun.get(dbName);
+  db.on((data) => {
+    if (data && data.data && !uniqueData.has(data.data)) {
+      uniqueData.add(data.data);
+      console.log("New unique data:", data.data);
+    }
   });
 };
 
 </script>
-
 
 <div>
   <form on:submit|preventDefault={() => putData(dbName, text)}>
