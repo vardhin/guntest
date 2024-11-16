@@ -7,7 +7,7 @@ const Gun = gun({
 
 let dbName = '';
 let text = '';
-let uniqueData = new Set();
+let retrievedData = '';
 
 Gun.on("ready", () => {
   console.log("Gun is ready")
@@ -23,17 +23,24 @@ const putData = (dbName, str) => {
 const getData = (dbName) => {
   const db = Gun.get(dbName);
   db.on((data) => {
-    if (data && data.data && !uniqueData.has(data.data)) {
-      uniqueData.add(data.data);
-      console.log("New unique data:", data.data);
-    }
+    retrievedData = data?.data || '';
   });
+};
+
+const handleSubmit = async () => {
+  putData(dbName, text);
+  getData(dbName);
+};
+
+const handleFetch = () => {
+  getData(dbName);
 };
 
 </script>
 
+
 <div>
-  <form on:submit|preventDefault={() => putData(dbName, text)}>
+  <form on:submit|preventDefault={handleSubmit}>
     <div>
       <label for="dbName">Database Name:</label>
       <input type="text" id="dbName" bind:value={dbName} />
@@ -44,21 +51,14 @@ const getData = (dbName) => {
     </div>
     <button type="submit">Save Data</button>
   </form>
+
+  <button on:click={handleFetch} class="mt-4">Fetch Latest Data</button>
+
+  {#if retrievedData}
+    <div class="mt-4">
+      <h3>Retrieved Data:</h3>
+      <p>{retrievedData}</p>
+    </div>
+  {/if}
 </div>
 
-{#if dbName}
-  {#await getData(dbName)}
-    <p>Loading data...</p>
-  {:then result}
-    {#if result?.data}
-      <div class="result">
-        <h3>Data from "{dbName}":</h3>
-        <p>{result.data}</p>
-      </div>
-    {:else}
-      <p>No data found in "{dbName}"</p>
-    {/if}
-  {:catch error}
-    <p class="error">Error loading data: {error}</p>
-  {/await}
-{/if}
